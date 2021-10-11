@@ -1,18 +1,14 @@
 package com.parallelprogramming.example.async.service;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
-import com.parallelprogramming.example.async.model.EmployeeAddresses;
-import com.parallelprogramming.example.async.model.EmployeeNames;
-import com.parallelprogramming.example.async.model.EmployeePhone;
 
 @Service
 public class AsyncService {
@@ -20,46 +16,42 @@ public class AsyncService {
 	private static Logger log = LoggerFactory.getLogger(AsyncService.class);
 
 	@Autowired
-	private RestTemplate restTemplate;
+	private static RestTemplate restTemplate=new RestTemplate();
 
-	@Bean
-	public RestTemplate restTemplate() {
-		return new RestTemplate();
+	public static CompletableFuture<Object> loadAsyncUrlData(List<String> urls) {
+		List<CompletableFuture<List<Object>>> urlResponse = urls.stream()
+				.map(url -> CompletableFuture.supplyAsync(() ->
+						 getAllEmployeeDetails(url)
+				).exceptionally(exception -> {
+					System.err.println("exception: " + exception);
+					return null;}))
+				.collect(Collectors.toList());
+		CompletableFuture<Object> combinedData = combineAllUrlResponseData(urlResponse);
+		return combinedData;
+	}
+	public  static CompletableFuture<Object> combineAllUrlResponseData(List<CompletableFuture<List<Object>>> responses) {
+		CompletableFuture<Void> completableResponses =
+				CompletableFuture.allOf(responses.toArray(new CompletableFuture[responses.size()]));
+		return completableResponses.thenApply(k ->
+				responses.stream().
+						map(response ->
+						 response.join()).collect(Collectors.toList()));
 	}
 
-	@Async("asyncExecutor")
-	public CompletableFuture<EmployeeNames> getEmployeeName() throws InterruptedException 
-	{
-		log.info("getEmployeeName Starts");
-		EmployeeNames employeeNameData = restTemplate.getForObject("http://localhost:8081/names", EmployeeNames.class);
-		log.info("employeeNameData, {}", employeeNameData);
-		Thread.sleep(10000L);	//Intentional delay
-		log.info("employeeNameData completed");
-		return CompletableFuture.completedFuture(employeeNameData);
-	}
+	public static List<Object>  getAllEmployeeDetails(String url) {
+		log.info("getAllEmployeeDetails Starts");
+		List<Object> employeeDetails=restTemplate
+				.getForObject(url,List.class);
+		log.info("getAllEmployeeDetails, {}", employeeDetails);
+			try {
+				Thread.sleep(1000L);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				throw new IllegalStateException(e);
+			}
 
-	@Async("asyncExecutor")
-	public CompletableFuture<EmployeeAddresses> getEmployeeAddress() throws InterruptedException 
-	{
-		log.info("getEmployeeAddress Starts");
-		EmployeeAddresses employeeAddressData = restTemplate.getForObject("http://localhost:8081/addresses", EmployeeAddresses.class);
-
-		log.info("employeeAddressData, {}", employeeAddressData);
-		Thread.sleep(10000L);	//Intentional delay
-		log.info("employeeAddressData completed");
-		return CompletableFuture.completedFuture(employeeAddressData);
-	}
-
-	@Async("asyncExecutor")
-	public CompletableFuture<EmployeePhone> getEmployeePhone() throws InterruptedException 
-	{
-		log.info("getEmployeePhone Starts");
-		EmployeePhone employeePhoneData = restTemplate.getForObject("http://localhost:8081/phones", EmployeePhone.class);
-
-		log.info("employeePhoneData, {}", employeePhoneData);
-		Thread.sleep(10000L);	//Intentional delay
-		log.info("employeePhoneData completed");
-		return CompletableFuture.completedFuture(employeePhoneData);
+		log.info("getAllEmployeeDetails completed");
+		return employeeDetails;
 	}
 
 }
