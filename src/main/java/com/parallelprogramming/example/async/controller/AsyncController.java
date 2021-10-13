@@ -3,7 +3,6 @@ package com.parallelprogramming.example.async.controller;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import com.parallelprogramming.example.async.service.AsyncService;
 import org.slf4j.Logger;

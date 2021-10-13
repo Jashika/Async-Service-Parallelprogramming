@@ -15,10 +15,4 @@ public class EmployeePhoneNumber implements Serializable{
 		this.phoneNumber = phoneNumber;
 	}
 
-
-	@Override
-	public String toString() {
-		return "EmployeePhone [phoneNumber=" + phoneNumber + "]";
-	}
-
 }
