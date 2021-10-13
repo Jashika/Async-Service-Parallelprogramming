@@ -3,7 +3,6 @@ package com.parallelprogramming.example.async.model;
 import java.io.Serializable;
 
 public class EmployeeName implements Serializable {
-	private static final long serialVersionUID = -1773599508061743940L;
 	public String firstName;
 	public String lastName;
 	public String getFirstName() {
@@ -18,11 +17,6 @@ public class EmployeeName implements Serializable {
 	public void setLastName(String lastName) {
 		this.lastName = lastName;
 	}
-	@Override
-	public String toString() {
-		return "EmployeeName [firstName=" + firstName + ", lastName=" + lastName + "]";
-	}
-	
 	
 	
 }
